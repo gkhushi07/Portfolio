@@ -1,0 +1,37 @@
+/* Intro.css */
+#hero {
+  width: 80% !important;
+  margin: auto;
+  display: flex;
+  flex-direction: row; /* Align items horizontally */
+  justify-content: space-between; /* Ensure space between the text and image */
+  align-items: center; /* Align vertically to the center */
+  padding-top: 4rem; /* Add space so the navbar doesn't overlap */
+  gap: 5rem; /* Space between text and image */
+  width: 100%; /* Ensure full width */
+}
+
+#intro {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  align-items: flex-start; /* Align text to the left */
+}
+
+#dp {
+  flex: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: 'Courier New', Courier, monospace; /* Coding font */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 20px;
+}

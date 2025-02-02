@@ -1,0 +1,33 @@
+/* DescriptiveCard.css */
+
+.descriptive-card-section {
+    background-color: rgba(39, 40, 41, 0.6); /* Dark grayish background with transparency */
+    position: relative;
+    padding: 5px;
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.2); /* Box shadow on the top */
+}
+
+.descriptive-card-title {
+    margin: 5px;
+    text-align: left;
+    font-size: 2.5rem;
+    color: #fff; /* Light text color for contrast */
+}
+
+.descriptive-card-description {
+    text-align: left;
+    font-size: 1rem;
+    color: #ccc; /* Light grey description text */
+    line-height: 1.6;
+    margin: 5px;
+}
+
+@media (max-width: 768px) {
+    .descriptive-card-title {
+        font-size: 2rem;
+    }
+
+    .descriptive-card-description {
+        font-size: 1rem;
+    }
+}

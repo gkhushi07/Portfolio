@@ -1,0 +1,61 @@
+/* Navbar.css */
+.navbar {
+    padding: 20px 20px;
+    position: fixed;
+    top: 5%;
+    left: 0;       /* Aligns the navbar to the top of the viewport */
+    width: 100%;     /* Ensures the navbar spans the full width of the viewport */
+    z-index: 1000;   /* Places the navbar above other content */
+  }
+  
+  .navbar-container {
+    display: flex;
+    justify-content: space-evenly; /* Align links to the right */
+    align-items: center;
+  }
+  
+  .navbar-links {
+    display: flex;
+    gap: 5rem; /* Increase gap between icons */
+  }
+  
+  .navbar-links.active {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    /* top: 60px; */
+    /* right: 20px; */
+    background-color: #333;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .navbar-icon {
+    font-size: 2rem; /* Larger font size */
+    font-weight: bold; /* Bold text */
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+    
+  .navbar-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  
+  .icon-bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+  }
+  
+  @media (max-width: 768px) {
+    .navbar-links {
+      display: none;
+    }
+  
+    .navbar-toggle {
+      display: flex;
+    }
+  }
