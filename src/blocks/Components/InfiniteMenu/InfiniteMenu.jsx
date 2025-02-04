@@ -1,7 +1,7 @@
 /*
-	jsrepo 1.29.1
-	Installed from https://reactbits.dev/default/
-	2-2-2025
+  jsrepo 1.29.1
+  Installed from https://reactbits.dev/default/
+  2-2-2025
 */
 
 import { useEffect, useRef, useState } from "react";
@@ -75,6 +75,10 @@ in vec2 vUvs;
 in float vAlpha;
 flat in int vInstanceId;
 
+// Dark silver outline color with transparency (adjust alpha for transparency)
+const vec4 OUTLINE_COLOR = vec4(0.392, 0.392, 0.392, 0.5); // Dark silver with transparency
+const float OUTLINE_THICKNESS = 0.05; // Outline thickness (normalized)
+
 void main() {
     // Calculate which item to display based on instance ID
     int itemIndex = vInstanceId % uItemCount;
@@ -93,21 +97,37 @@ void main() {
     float scale = max(imageAspect / containerAspect, 
                      containerAspect / imageAspect);
     
-    // Rotate 180 degrees and adjust UVs for cover
-    vec2 st = 1.0 - vUvs; // 180 degree rotation
+    // Adjust UVs to add padding (5px normalized)
+    vec2 padding = vec2(5.0) / vec2(texSize); // Convert 5px to UV space
+    vec2 st = vec2(vUvs.x, 1.0 - vUvs.y); // Flip Y coordinate
     st = (st - 0.5) * scale + 0.5;
-    
-    // Clamp coordinates to prevent repeating
-    st = clamp(st, 0.0, 1.0);
-    
+
+    // Apply padding constraints
+    st = clamp(st, padding, 1.0 - padding);
+
     // Map to the correct cell in the atlas
     st = st * cellSize + cellOffset;
+
+    // Calculate the distance from the center of the circle
+    vec2 center = vec2(0.5);
+    float dist = length(st - center);
     
-    outColor = texture(uTex, st);
-    outColor.a *= vAlpha;
+    // Create an outline effect if near the border of the circle
+    float outlineMask = smoothstep(0.45, 0.5, dist); // Adjust for the outline thickness
+
+    // Sample texture
+    vec4 texColor = texture(uTex, st);
+
+    // Apply the outline effect only at the border
+    vec4 outlineColor = OUTLINE_COLOR; // Transparent outline color
+    vec4 finalColor = mix(outlineColor, texColor, texColor.a);
+
+    // Apply the final blended color
+    finalColor.a *= vAlpha;
+
+    outColor = finalColor;
 }
 `;
-
 class Face {
   /**
    * Creates a new triangle face by the indices of each vertex.
@@ -694,8 +714,8 @@ class InfiniteGridMenu {
   ) {
     this.canvas = canvas;
     this.items = items || [];
-    this.onActiveItemChange = onActiveItemChange || (() => {});
-    this.onMovementChange = onMovementChange || (() => {});
+    this.onActiveItemChange = onActiveItemChange || (() => { });
+    this.onMovementChange = onMovementChange || (() => { });
     this.#init(onInit);
   }
 
@@ -822,55 +842,93 @@ class InfiniteGridMenu {
     if (onInit) onInit(this);
   }
 
+  // In the InfiniteGridMenu class, update the #initTexture method:
+
   #initTexture() {
     const gl = this.gl;
     this.tex = createAndSetupTexture(
-      gl,
-      gl.LINEAR,
-      gl.LINEAR,
-      gl.CLAMP_TO_EDGE,
-      gl.CLAMP_TO_EDGE,
+        gl,
+        gl.LINEAR_MIPMAP_LINEAR, // Changed from LINEAR for better scaling
+        gl.LINEAR,
+        gl.CLAMP_TO_EDGE,
+        gl.CLAMP_TO_EDGE,
     );
 
     const itemCount = Math.max(1, this.items.length);
     this.atlasSize = Math.ceil(Math.sqrt(itemCount));
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const cellSize = 512;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const cellSize = 1024; // Increased for better quality
 
     canvas.width = this.atlasSize * cellSize;
     canvas.height = this.atlasSize * cellSize;
 
+    // Clear canvas with transparent background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     Promise.all(
-      this.items.map(
-        (item) =>
-          new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => resolve(img);
-            img.src = item.image;
-          }),
-      ),
-    ).then((images) => {
-      images.forEach((img, i) => {
-        const x = (i % this.atlasSize) * cellSize;
-        const y = Math.floor(i / this.atlasSize) * cellSize;
-        ctx.drawImage(img, x, y, cellSize, cellSize);
-      });
+        this.items.map(
+            (item) =>
+                new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    
+                    img.onload = () => {
+                        const aspectRatio = img.width / img.height;
+                        let drawWidth, drawHeight, offsetX, offsetY;
 
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        canvas,
-      );
-      gl.generateMipmap(gl.TEXTURE_2D);
+                        // Maintain aspect ratio while filling cell
+                        if (aspectRatio > 1) {
+                            drawWidth = cellSize;
+                            drawHeight = cellSize / aspectRatio;
+                            offsetX = 0;
+                            offsetY = (cellSize - drawHeight) / 2;
+                        } else {
+                            drawHeight = cellSize;
+                            drawWidth = cellSize * aspectRatio;
+                            offsetX = (cellSize - drawWidth) / 2;
+                            offsetY = 0;
+                        }
+
+                        resolve({ img, drawWidth, drawHeight, offsetX, offsetY });
+                    };
+
+                    img.onerror = reject;
+                    img.src = item.image;
+                })
+        )
+    ).then((imageData) => {
+        imageData.forEach((data, i) => {
+            const x = (i % this.atlasSize) * cellSize;
+            const y = Math.floor(i / this.atlasSize) * cellSize;
+
+            // Draw image with proper compositing
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(
+                data.img,
+                x + data.offsetX,
+                y + data.offsetY,
+                data.drawWidth,
+                data.drawHeight
+            );
+        });
+
+        gl.bindTexture(gl.TEXTURE_2D, this.tex);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            canvas
+        );
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }).catch(error => {
+        console.error('Error loading textures:', error);
     });
-  }
-
+}
+  
   #initDiscInstances(count) {
     const gl = this.gl;
     this.discInstances = {
@@ -998,9 +1056,9 @@ class InfiniteGridMenu {
       this.smoothRotationVelocity * 1.1,
     );
 
-    gl.uniform1i(this.discLocations.uItemCount, this.items.length);
+    gl.uniform1i(this.discLocations.uItemCount, Math.max(1, this.items.length));
     gl.uniform1i(this.discLocations.uAtlasSize, this.atlasSize);
-
+    
     gl.uniform1f(this.discLocations.uFrames, this.#frames);
     gl.uniform1f(this.discLocations.uScaleFactor, this.scaleFactor);
     gl.uniform1i(this.discLocations.uTex, 0);

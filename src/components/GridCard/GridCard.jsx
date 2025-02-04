@@ -2,19 +2,34 @@ import SpotlightCard from '../../blocks/Components/SpotlightCard/SpotlightCard';
 import React from "react";
 import "./GridCard.css"; // Make sure to import the CSS file for styling
 
+const getLogo = async (name) => {
+    try {
+        const logo = await import(`../../assets/SkillLogo/${name.toLowerCase()}.svg`);
+        return logo.default;
+    } catch {
+        return null; // Return a fallback logo if not found
+    }
+};
+
+// Example usage
 const gridData = [
-    { name: "JavaScript", logo: "path-to-logo1.png" },
-    { name: "React", logo: "path-to-logo2.png" },
-    { name: "Node.js", logo: "path-to-logo3.png" },
-    { name: "CSS", logo: "path-to-logo4.png" },
-    { name: "HTML", logo: "path-to-logo5.png" },
-    { name: "Python", logo: "path-to-logo6.png" },
+    { name: "React", logo: await getLogo("React") },
+    { name: "Vue.js", logo: await getLogo("Vue") },
+    { name: "Rails", logo: await getLogo("Rails") },
+    { name: "Ruby", logo: await getLogo("Ruby") },
+    { name: "Python", logo: await getLogo("Python") },
+    { name: "JavaScript", logo: await getLogo("JavaScript") },
+    { name: "HTML", logo: await getLogo("HTML") },
+    { name: "CSS", logo: await getLogo("CSS") },
+    { name: "Docker", logo: await getLogo("Docker") },
+    { name: "Github", logo: await getLogo("Git") }
 ];
+
 
 const GridCard = () => {
     return (
         <section className="grid-section">
-            <p className="grid-title">My grid</p>
+            <p className="grid-title">Skills</p>
             <div className="grid-grid">
                 {gridData.map((val, index) => (
                     <div key={index} className="grid-card">

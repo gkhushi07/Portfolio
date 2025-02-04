@@ -8,7 +8,7 @@ const DescriptiveCard = ({ title, description, textAlign = 'center' }) => {
         <section className="descriptive-card-section">
             <div className="descriptive-card-container">
                 <p className="descriptive-card-title" style={{ textAlign }}>{title}</p>
-                <p className="descriptive-card-description" style={{ textAlign }}>
+                <p className="descriptive-card-description" style={{ textAlign, whiteSpace: "pre-line" }}>
                     {description}
                 </p>
             </div>

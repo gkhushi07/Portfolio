@@ -54,8 +54,8 @@ export default function BlobCursor({
     <div className="container">
       <svg style={{ position: "absolute", width: 0, height: 0 }}>
         <filter id="blob">
-          <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="30" />
-          <feColorMatrix
+        <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="15" /> // Reduced from 30
+        <feColorMatrix
             in="blur"
             values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 35 -10"
           />

@@ -12,6 +12,7 @@
 }
 
 #intro {
+  font-family: 'Courier New', Courier, monospace;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -29,7 +30,6 @@
 }
 
 body {
-  font-family: 'Courier New', Courier, monospace; /* Coding font */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
