@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Slider from 'react-slick';
 import SpotlightCard from '../../blocks/Components/SpotlightCard/SpotlightCard';
 import './GridCard.css';
@@ -8,25 +8,31 @@ const getLogo = async (name) => {
         const logo = await import(`../../assets/SkillLogo/${name.toLowerCase()}.svg`);
         return logo.default;
     } catch {
-        return null; // Return a fallback logo if not found
+        return null;
     }
 };
 
-// Example usage
-const gridData = [
-    { name: 'React', logo: await getLogo('React') },
-    { name: 'Vue.js', logo: await getLogo('Vue') },
-    { name: 'Rails', logo: await getLogo('Rails') },
-    { name: 'Ruby', logo: await getLogo('Ruby') },
-    { name: 'Python', logo: await getLogo('Python') },
-    { name: 'JavaScript', logo: await getLogo('JavaScript') },
-    { name: 'HTML', logo: await getLogo('HTML') },
-    { name: 'CSS', logo: await getLogo('CSS') },
-    { name: 'Docker', logo: await getLogo('Docker') },
-    { name: 'GitHub', logo: await getLogo('Git') },
+const skills = [
+    'React', 'Vue', 'Rails', 'Ruby', 'Python', 
+    'JavaScript', 'HTML', 'CSS', 'Docker', 'Git'
 ];
 
 const GridCard = () => {
+    const [gridData, setGridData] = useState([]);
+
+    useEffect(() => {
+        const loadLogos = async () => {
+            const data = await Promise.all(
+                skills.map(async (name) => ({
+                    name,
+                    logo: await getLogo(name)
+                }))
+            );
+            setGridData(data);
+        };
+        loadLogos();
+    }, []);
+
     const settings = {
         dots: false,
         infinite: true,
@@ -41,16 +47,16 @@ const GridCard = () => {
                 settings: {
                     slidesToShow: 2,
                     slidesToScroll: 1,
-                },
+                }
             },
             {
                 breakpoint: 600,
                 settings: {
                     slidesToShow: 1,
                     slidesToScroll: 1,
-                },
-            },
-        ],
+                }
+            }
+        ]
     };
 
     return (

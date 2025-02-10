@@ -4,7 +4,6 @@ import Navbar from './components/navbar/Navbar';
 import Intro from './components/intro/Intro';
 import Squares from './blocks/Backgrounds/Squares/Squares';
 import DescriptiveCards from './components/DescriptiveCard/DescriptiveCard';
-import BlobCursor from './blocks/Animations/BlobCursor/BlobCursor';
 import GridCard from './components/GridCard/GridCard';
 import Timeline from './components/Timeline/Timeline';
 import SphereDescriptiveCard from './components/SphereDescriptiveCard/SphereDescriptiveCard';
@@ -52,7 +51,7 @@ function App() {
         <Timeline />
       </section>
       <section id='projects'>
-        <FadeContent blur={true} duration={2000} easing="ease-out" initialOpacity={0}>
+        <FadeContent blur={true} duration={1000} easing="ease-out" initialOpacity={0}>
           {<SphereDescriptiveCard />}
         </FadeContent>
       </section>
