@@ -1,37 +1,158 @@
 /* Intro.css */
-#hero {
-  width: 80% !important;
-  margin: auto;
-  display: flex;
-  flex-direction: row; /* Align items horizontally */
-  justify-content: space-between; /* Ensure space between the text and image */
-  align-items: center; /* Align vertically to the center */
-  padding-top: 4rem; /* Add space so the navbar doesn't overlap */
-  gap: 5rem; /* Space between text and image */
-  width: 100%; /* Ensure full width */
-}
-
-#intro {
-  font-family: 'Courier New', Courier, monospace;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: left;
-  align-items: flex-start; /* Align text to the left */
-}
-
-#dp {
-  flex: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.intro-container {
+  position: relative;
   width: 100%;
-  height: 100%;
-}
-
-body {
+  height: 100vh;
+  background-color: black;
+  overflow: hidden;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-size: 20px;
+}
+
+.intro-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.intro-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-content {
+  position: absolute;
+  top: 40%;
+  left: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 80%;
+  max-width: 1200px;
+}
+
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid white;
+  margin-bottom: 1.5rem;
+}
+
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-details {
+  color: white;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.profile-details h1 {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.profile-details h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.status-wrapper {
+  margin: 1rem 0;
+}
+
+.social-links {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.social-links a {
+  color: white;
+  font-size: 1.8rem;
+  transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #007bff;
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-content {
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: 2rem;
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .profile-image {
+    width: 120px;
+    height: 120px;
+    align-self: center;
+  }
+
+  .profile-details {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-details h1 {
+    font-size: 2rem;
+  }
+
+  .profile-details h2 {
+    font-size: 1.25rem;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-content {
+    padding: 1rem;
+    width: 90%;
+  }
+
+  .profile-details h1 {
+    font-size: 1.75rem;
+  }
+
+  .profile-details h2 {
+    font-size: 1.1rem;
+  }
+
+  .social-links {
+    gap: 1rem;
+  }
+
+  .social-links a {
+    font-size: 1.5rem;
+  }
 }

@@ -14,8 +14,20 @@ const items = [
         image: kivoLogo,
         link: 'https://www.kivo.ai/',
         title: 'Kivo.ai',
-        description: 'An all-in-one Employee Management tool featuring a social feed, HRMS, project management board, employee profiles, leave management, attendance tracking, performance reviews, payroll, and more. Built with Ruby on Rails and AngularJS.'
-    },
+        description: [
+            'An all-in-one Employee Management tool featuring:',
+            'Social feed',
+            'HRMS',
+            'Project management board',
+            'Employee profiles',
+            'Leave management',
+            'Attendance tracking',
+            'Performance reviews',
+            'Payroll',
+            'And more...',
+        ]
+    }
+    ,
     {
         image: lanacashLogo,
         link: 'https://www.lana.cash/',
@@ -50,7 +62,7 @@ const items = [
 
 function SphereDescriptiveCard() {
     return (
-        <div id="SphereDescriptiveCard" style={{ height: '100%', position: 'relative'}}>
+        <div id="SphereDescriptiveCard" style={{ height: '100%',  width: "100%", position: 'relative'}}>
             <p id="title">Projects</p>
             <InfiniteMenu items={items} />
         </div>

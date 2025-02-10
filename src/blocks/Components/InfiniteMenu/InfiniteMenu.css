@@ -7,6 +7,30 @@
 /* Note: this CSS is only an example, you can overlay whatever you want using the
  * activeItem logic
  */
+/* Add to your InfiniteMenu.css */
+.infinite-menu-canvas {
+  background: #000;
+}
+
+/* Add ambient light effect */
+.menu-container {
+  position: relative;
+}
+
+.menu-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(0, 0, 0, 0) 70%
+  );
+}
 
 #infinite-grid-menu-canvas {
   cursor: grab;

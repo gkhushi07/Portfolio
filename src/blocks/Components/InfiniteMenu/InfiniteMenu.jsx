@@ -75,12 +75,15 @@ in vec2 vUvs;
 in float vAlpha;
 flat in int vInstanceId;
 
-// Dark silver outline color with transparency (adjust alpha for transparency)
-const vec4 OUTLINE_COLOR = vec4(0.392, 0.392, 0.392, 0.5); // Dark silver with transparency
-const float OUTLINE_THICKNESS = 0.05; // Outline thickness (normalized)
+// Define colors and parameters for a more realistic metallic effect
+const vec4 OUTLINE_COLOR = vec4(0.3, 0.3, 0.35, 1.0);  // Darker silver for depth
+const vec4 HIGHLIGHT_COLOR = vec4(0.85, 0.85, 0.9, 1.0); // Subtle shine
+const vec4 SHADOW_COLOR = vec4(0.2, 0.2, 0.25, 1.0);    // Deeper shadow for contrast
+const float OUTLINE_THICKNESS = 0.06;  // Increased for more depth
+const float SHINE_INTENSITY = 0.6;     // Reduced to make it more subtle
 
 void main() {
-    // Calculate which item to display based on instance ID
+    // Determine the item to display
     int itemIndex = vInstanceId % uItemCount;
     int cellsPerRow = uAtlasSize;
     int cellX = itemIndex % cellsPerRow;
@@ -88,43 +91,51 @@ void main() {
     vec2 cellSize = vec2(1.0) / vec2(float(cellsPerRow));
     vec2 cellOffset = vec2(float(cellX), float(cellY)) * cellSize;
 
-    // Get texture dimensions and calculate aspect ratio
-    ivec2 texSize = textureSize(uTex, 0);
-    float imageAspect = float(texSize.x) / float(texSize.y);
-    float containerAspect = 1.0; // Assuming square container
-    
-    // Calculate cover scale factor
-    float scale = max(imageAspect / containerAspect, 
-                     containerAspect / imageAspect);
-    
-    // Adjust UVs to add padding (5px normalized)
-    vec2 padding = vec2(5.0) / vec2(texSize); // Convert 5px to UV space
-    vec2 st = vec2(vUvs.x, 1.0 - vUvs.y); // Flip Y coordinate
-    st = (st - 0.5) * scale + 0.5;
-
-    // Apply padding constraints
-    st = clamp(st, padding, 1.0 - padding);
-
-    // Map to the correct cell in the atlas
-    st = st * cellSize + cellOffset;
-
-    // Calculate the distance from the center of the circle
+    // Calculate distance from center for circular shape
     vec2 center = vec2(0.5);
-    float dist = length(st - center);
+    float dist = length(vUvs - center);
     
-    // Create an outline effect if near the border of the circle
-    float outlineMask = smoothstep(0.45, 0.5, dist); // Adjust for the outline thickness
+    // Create main circle mask
+    float circleMask = smoothstep(0.5, 0.48, dist);
+    
+    // Create outline mask
+    float outlineMask = smoothstep(0.5, 0.48 - OUTLINE_THICKNESS, dist);
+    
+    // Metallic gradient to add depth
+    float metalGradient = smoothstep(0.48, 0.5, dist) * 
+                         (0.7 + 0.3 * sin(dist * 20.0 + vAlpha * 4.0));
+    
+    // Adjust shine intensity based on distance
+    float shine = pow(1.0 - dist, 2.5) * SHINE_INTENSITY;
 
-    // Sample texture
+    // Sample the texture
+    vec2 st = vec2(vUvs.x, 1.0 - vUvs.y);
+    st = st * cellSize + cellOffset;
     vec4 texColor = texture(uTex, st);
-
-    // Apply the outline effect only at the border
-    vec4 outlineColor = OUTLINE_COLOR; // Transparent outline color
-    vec4 finalColor = mix(outlineColor, texColor, texColor.a);
-
-    // Apply the final blended color
-    finalColor.a *= vAlpha;
-
+    
+    // Background color (black)
+    vec4 backgroundColor = vec4(0.0, 0.0, 0.0, 1.0);
+    
+    // Darker metallic outline for depth
+    vec4 outlineColor = mix(SHADOW_COLOR, OUTLINE_COLOR, metalGradient) * 0.8; // Darker mix
+    
+    // Inner highlight for realism
+    vec4 innerHighlight = mix(OUTLINE_COLOR, HIGHLIGHT_COLOR, shine);
+    
+    // Final color composition
+    vec4 finalColor;
+    if (dist > 0.48) {
+        // Outline area with depth
+        finalColor = outlineColor;
+    } else {
+        // Inner circle area
+        finalColor = mix(backgroundColor, texColor, texColor.a);
+        finalColor = mix(finalColor, innerHighlight, 0.4); // Add subtle shine
+    }
+    
+    // Apply alpha and visibility falloff
+    finalColor.a *= vAlpha * circleMask;
+    
     outColor = finalColor;
 }
 `;
@@ -847,11 +858,11 @@ class InfiniteGridMenu {
   #initTexture() {
     const gl = this.gl;
     this.tex = createAndSetupTexture(
-        gl,
-        gl.LINEAR_MIPMAP_LINEAR, // Changed from LINEAR for better scaling
-        gl.LINEAR,
-        gl.CLAMP_TO_EDGE,
-        gl.CLAMP_TO_EDGE,
+      gl,
+      gl.LINEAR_MIPMAP_LINEAR, // Changed from LINEAR for better scaling
+      gl.LINEAR,
+      gl.CLAMP_TO_EDGE,
+      gl.CLAMP_TO_EDGE,
     );
 
     const itemCount = Math.max(1, this.items.length);
@@ -867,68 +878,68 @@ class InfiniteGridMenu {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     Promise.all(
-        this.items.map(
-            (item) =>
-                new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = "anonymous";
-                    
-                    img.onload = () => {
-                        const aspectRatio = img.width / img.height;
-                        let drawWidth, drawHeight, offsetX, offsetY;
+      this.items.map(
+        (item) =>
+          new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
 
-                        // Maintain aspect ratio while filling cell
-                        if (aspectRatio > 1) {
-                            drawWidth = cellSize;
-                            drawHeight = cellSize / aspectRatio;
-                            offsetX = 0;
-                            offsetY = (cellSize - drawHeight) / 2;
-                        } else {
-                            drawHeight = cellSize;
-                            drawWidth = cellSize * aspectRatio;
-                            offsetX = (cellSize - drawWidth) / 2;
-                            offsetY = 0;
-                        }
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              let drawWidth, drawHeight, offsetX, offsetY;
 
-                        resolve({ img, drawWidth, drawHeight, offsetX, offsetY });
-                    };
+              // Maintain aspect ratio while filling cell
+              if (aspectRatio > 1) {
+                drawWidth = cellSize;
+                drawHeight = cellSize / aspectRatio;
+                offsetX = 0;
+                offsetY = (cellSize - drawHeight) / 2;
+              } else {
+                drawHeight = cellSize;
+                drawWidth = cellSize * aspectRatio;
+                offsetX = (cellSize - drawWidth) / 2;
+                offsetY = 0;
+              }
 
-                    img.onerror = reject;
-                    img.src = item.image;
-                })
-        )
+              resolve({ img, drawWidth, drawHeight, offsetX, offsetY });
+            };
+
+            img.onerror = reject;
+            img.src = item.image;
+          })
+      )
     ).then((imageData) => {
-        imageData.forEach((data, i) => {
-            const x = (i % this.atlasSize) * cellSize;
-            const y = Math.floor(i / this.atlasSize) * cellSize;
+      imageData.forEach((data, i) => {
+        const x = (i % this.atlasSize) * cellSize;
+        const y = Math.floor(i / this.atlasSize) * cellSize;
 
-            // Draw image with proper compositing
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.drawImage(
-                data.img,
-                x + data.offsetX,
-                y + data.offsetY,
-                data.drawWidth,
-                data.drawHeight
-            );
-        });
-
-        gl.bindTexture(gl.TEXTURE_2D, this.tex);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGBA,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            canvas
+        // Draw image with proper compositing
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(
+          data.img,
+          x + data.offsetX,
+          y + data.offsetY,
+          data.drawWidth,
+          data.drawHeight
         );
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
+      });
+
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        canvas
+      );
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.bindTexture(gl.TEXTURE_2D, null);
     }).catch(error => {
-        console.error('Error loading textures:', error);
+      console.error('Error loading textures:', error);
     });
-}
-  
+  }
+
   #initDiscInstances(count) {
     const gl = this.gl;
     this.discInstances = {
@@ -1058,7 +1069,7 @@ class InfiniteGridMenu {
 
     gl.uniform1i(this.discLocations.uItemCount, Math.max(1, this.items.length));
     gl.uniform1i(this.discLocations.uAtlasSize, this.atlasSize);
-    
+
     gl.uniform1f(this.discLocations.uFrames, this.#frames);
     gl.uniform1f(this.discLocations.uScaleFactor, this.scaleFactor);
     gl.uniform1i(this.discLocations.uTex, 0);
@@ -1231,17 +1242,31 @@ export default function InfiniteMenu({ items = [] }) {
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <canvas id="infinite-grid-menu-canvas" ref={canvasRef} />
 
-      {/* Feel free to customize what's displayed when the menu is not being dragged and an item is displayed in the center */}
       {activeItem && (
         <>
           <h2 className={`face-title ${isMoving ? "inactive" : "active"}`}>
             {activeItem.title}
           </h2>
 
-          <p className={`face-description ${isMoving ? "inactive" : "active"}`}>
-            {" "}
-            {activeItem.description}
-          </p>
+          {/* Render description as bullet points */}
+          <div className={`face-description ${isMoving ? "inactive" : "active"}`}>
+            {Array.isArray(activeItem.description) ? (
+              <ul>
+                {activeItem.description.map((point, index) => (
+                  <li key={index}>{point}</li>
+                ))}
+              </ul>
+            ) : (
+              <ul>
+                {activeItem.description
+                  .split(/\n|•/) // Split by newline or bullet symbol
+                  .filter((point) => point.trim() !== "") // Remove empty lines
+                  .map((point, index) => (
+                    <li key={index}>{point.trim()}</li>
+                  ))}
+              </ul>
+            )}
+          </div>
 
           <div
             onClick={handleButtonClick}
